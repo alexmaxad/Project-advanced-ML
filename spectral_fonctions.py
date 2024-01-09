@@ -49,7 +49,8 @@ def KNN_adjacency_matrix(data, similarity_function, K, weighted : bool) :
             if j != i :
                 distances[j] = euclidian_similarity_function(data[i], data[j])
             if j == i :
-                distances[j] = np.inf
+                #distances[j] = np.inf
+                distances[j] = 0
         sorted_distances = dict(sorted(distances.items(), key=lambda item: item[1], reverse=False))
         keys_to_zero = list(sorted_distances.keys())[K:]
         keys_to_one = list(sorted_distances.keys())[:K]
