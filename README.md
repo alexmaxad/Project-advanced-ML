@@ -1,2 +1,3 @@
 # Project advanced ML
- Spectral clustering and guided PCA
+
+Spectral clustering and guided PCA
