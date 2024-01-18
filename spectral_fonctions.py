@@ -15,12 +15,14 @@ from scipy.spatial.distance import cdist
 
 ## Similarity measures
 
-def gaussian_similarity_function(data_point_1, data_point_2) : 
+def gaussian_similarity_function(data_point_1, data_point_2) :
+    """ Computes the similarity between two datapoints with gaussian similarity function. Not used in practice because we used KNN graphs.""" 
     sigma = 1
     dist = np.linalg.norm(data_point_1 - data_point_2)
     return np.exp( - ((dist**2) / (2*sigma)))
 
 def euclidian_similarity_function(data_point_1, data_point_2) :
+    """Euclidian distance between two points"""
     return np.linalg.norm(data_point_1 - data_point_2)
 
 
@@ -28,7 +30,8 @@ def euclidian_similarity_function(data_point_1, data_point_2) :
 
 ## Adjacency matrices
 
-def fully_connected_adjacency_matrix(data, similarity_funtion) : 
+def fully_connected_adjacency_matrix(data, similarity_funtion) :
+    """Creates a fully connected adjacency matrix with the giver similarity function""" 
     (nbr_of_points, dimension) = np.shape(data)
     W = np.zeros((nbr_of_points,nbr_of_points))
     for i in range(nbr_of_points) :
@@ -41,6 +44,7 @@ def fully_connected_adjacency_matrix(data, similarity_funtion) :
     return W
 
 def KNN_adjacency_matrix(data, similarity_function, K, weighted : bool) :
+    """Creates a K nearest neighbors graph, with the given similarity function"""
     (nbr_of_points, dimension) = np.shape(data)
     W = np.zeros((nbr_of_points,nbr_of_points))
     for i in range(nbr_of_points) :
@@ -71,6 +75,7 @@ def KNN_adjacency_matrix(data, similarity_function, K, weighted : bool) :
 ## Laplacians
 
 def degree_matrix(adjacency_matrix) :
+    """Creates the degree matrix from an adjacency matrix"""
     dimension = len(adjacency_matrix)
     d = []
     for i in range(dimension) :
@@ -79,14 +84,14 @@ def degree_matrix(adjacency_matrix) :
     return D
 
 def regular_laplacian(adjacency_matrix) :
-
+    """Regular laplacian from adjacency matrix"""
     W = adjacency_matrix
     D = degree_matrix(W)
 
     return D - W
 
 def laplacian_sym(adjacency_matrix) :
-
+    """Symetric laplacian from adjacency matrix"""
     W = adjacency_matrix
     I = np.identity(len(W))
 
@@ -103,7 +108,7 @@ def laplacian_sym(adjacency_matrix) :
     return I - step_2
 
 def laplacian_rw(adjacency_matrix) : 
-
+    """Random walk laplacian from adjacency matrix"""
     W = adjacency_matrix
     I = np.identity(len(W))
 
@@ -121,22 +126,8 @@ def laplacian_rw(adjacency_matrix) :
 
 ## Eigenvectors computation
 
-def power_iteration(A, n_simulations):
-
-    vector = np.random.rand(A.shape[1])
-
-    for i in range(n_simulations):
-        y = np.dot(A, vector)
-        new_vector = y / np.linalg.norm(y)
-        if np.linalg.norm(new_vector - vector) < 1e-6:
-            break
-        vector = new_vector
-
-    lambda_k = np.dot(new_vector, np.dot(A, new_vector)) / np.dot(new_vector, new_vector)
-
-    return new_vector, lambda_k
-
 def simultaneous_power_iteration(A):
+    """A first method to get the smallest eigenvectors of a matrix, based on the QR decomposition. But not used in practice because too slow."""
 
     # QR method
 
@@ -165,7 +156,7 @@ def compute_matrix_U_simult_power(A, k) :
     return U
 
 def compute_matrix_U_ARPACK(A, k) :
-
+    """Computing the smallest eigen vectors using the package ARPACK."""
     vecp = eigsh(A, k, which='SM')[1]
     
     return vecp
@@ -176,6 +167,7 @@ def compute_matrix_U_ARPACK(A, k) :
 ## Final spectral clustering functions
 
 def final_spectral_clustering_regular(data, similarity_function, k_nearest_neighboors, number_of_clusters, weighted : bool, eigensolver) :
+    """Computes the predicted labels fro the data by spectral clustering, using the regular laplacian."""
 
     W = KNN_adjacency_matrix(data, similarity_function, k_nearest_neighboors, weighted)
     L = regular_laplacian(W)
@@ -189,6 +181,7 @@ def final_spectral_clustering_regular(data, similarity_function, k_nearest_neigh
     return labels
 
 def final_spectral_clustering_sym(data, similarity_function, k_nearest_neighboors, number_of_clusters, weighted : bool, eigensolver) :
+    """Computes the predicted labels fro the data by spectral clustering, using the symetric laplacian."""
 
     W = KNN_adjacency_matrix(data, similarity_function, k_nearest_neighboors, weighted)
     L = laplacian_sym(W)
@@ -203,6 +196,7 @@ def final_spectral_clustering_sym(data, similarity_function, k_nearest_neighboor
     return labels
 
 def final_spectral_clustering_rw(data, similarity_function, k_nearest_neighboors, number_of_clusters, weighted : bool, eigensolver) :
+    """Computes the predicted labels fro the data by spectral clustering, using the random walk laplacian."""
 
     W = KNN_adjacency_matrix(data, similarity_function, k_nearest_neighboors, weighted)
     L = laplacian_rw(W)
@@ -219,6 +213,7 @@ def final_spectral_clustering_rw(data, similarity_function, k_nearest_neighboors
 ## Loss and inertia
 
 def centers(labels, data) :
+    """Compute the barycenters of predicted clusters."""
 
     centers = []
 
@@ -231,7 +226,7 @@ def centers(labels, data) :
     return centers
 
 def loss_inertia(labels, data) :
-
+    """Computes the inertia loss with respect to predicted labels barycenters."""
     inertia = 0
 
     for label in set(labels) : 

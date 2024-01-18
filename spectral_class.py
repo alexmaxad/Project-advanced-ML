@@ -15,15 +15,18 @@ from scipy.spatial.distance import cdist
 ## Similarity measures
 
 def gaussian_similarity_function_(data_point_1, data_point_2, sigma) : 
+    """ Computes the similarity between two datapoints with gaussian similarity function"""
     dist = np.linalg.norm(data_point_1 - data_point_2)
     return np.exp( - ((dist**2) / (2*sigma)))
 
 def euclidian_similarity_function(data_point_1, data_point_2, sigma) :
+    """Euclidian distance between two points"""
     return np.linalg.norm(data_point_1 - data_point_2)
 
 ## Laplacians
 
 def degree_matrix(adjacency_matrix) :
+    """Creates the degree matrix from an adjacency matrix"""
     dimension = len(adjacency_matrix)
     d = []
     for i in range(dimension) :
@@ -32,14 +35,14 @@ def degree_matrix(adjacency_matrix) :
     return D
 
 def regular_laplacian(adjacency_matrix) :
-
+    """Regular laplacian from adjacency matrix"""
     W = adjacency_matrix
     D = degree_matrix(W)
 
     return D - W
 
 def laplacian_sym(adjacency_matrix) :
-
+    """Symetric laplacian from adjacency matrix"""
     W = adjacency_matrix
     I = np.identity(len(W))
 
@@ -56,7 +59,7 @@ def laplacian_sym(adjacency_matrix) :
     return I - step_2
 
 def laplacian_rw(adjacency_matrix) : 
-
+    """Random walk laplacian from adjacency matrix"""
     W = adjacency_matrix
     I = np.identity(len(W))
 
@@ -71,22 +74,8 @@ def laplacian_rw(adjacency_matrix) :
 
 ## Eigenvectors computation
 
-def power_iteration(A, n_simulations):
-
-    vector = np.random.rand(A.shape[1])
-
-    for i in range(n_simulations):
-        y = np.dot(A, vector)
-        new_vector = y / np.linalg.norm(y)
-        if np.linalg.norm(new_vector - vector) < 1e-6:
-            break
-        vector = new_vector
-
-    lambda_k = np.dot(new_vector, np.dot(A, new_vector)) / np.dot(new_vector, new_vector)
-
-    return new_vector, lambda_k
-
 def simultaneous_power_iteration(A):
+    """A first method to get the smallest eigenvectors of a matrix, based on the QR decomposition. But not used in practice because too slow."""
 
     # QR method
 
@@ -115,7 +104,7 @@ def compute_matrix_U_simult_power(A, k) :
     return U
 
 def compute_matrix_U_ARPACK(A, k) :
-
+    """Computing the smallest eigen vectors using the package ARPACK."""
     vecp = eigsh(A, k, which='SM')[1]
     
     return vecp
