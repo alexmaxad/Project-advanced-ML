@@ -167,7 +167,19 @@ def compute_matrix_U_ARPACK(A, k) :
 ## Final spectral clustering functions
 
 def final_spectral_clustering_regular(data, similarity_function, k_nearest_neighboors, number_of_clusters, weighted : bool, eigensolver) :
-    """Computes the predicted labels fro the data by spectral clustering, using the regular laplacian."""
+    """Computes the predicted labels fro the data by spectral clustering, using the regular laplacian.
+    
+    Parameters
+    ----------
+
+    data : the array containing our dataset
+    similarity_function : the similarity notion we use to measure the distance between point in our graph
+    k_nearest_neighbors : the number of nearest neighbors we use to to go from our graph to the adjacency matrix
+    number_of_clusters : clear
+    weighted : True or False, it depends on if we want to weight the edges of our graph with the weights computed by the similarity function. 
+    eigensolver : the function we want to use to computed the smallest eigen values of the laplacian.
+    
+    """
 
     W = KNN_adjacency_matrix(data, similarity_function, k_nearest_neighboors, weighted)
     L = regular_laplacian(W)
@@ -181,7 +193,19 @@ def final_spectral_clustering_regular(data, similarity_function, k_nearest_neigh
     return labels
 
 def final_spectral_clustering_sym(data, similarity_function, k_nearest_neighboors, number_of_clusters, weighted : bool, eigensolver) :
-    """Computes the predicted labels fro the data by spectral clustering, using the symetric laplacian."""
+    """Computes the predicted labels fro the data by spectral clustering, using the regular laplacian.
+    
+    Parameters
+    ----------
+
+    data : the array containing our dataset
+    similarity_function : the similarity notion we use to measure the distance between point in our graph
+    k_nearest_neighbors : the number of nearest neighbors we use to to go from our graph to the adjacency matrix
+    number_of_clusters : clear
+    weighted : True or False, it depends on if we want to weight the edges of our graph with the weights computed by the similarity function. 
+    eigensolver : the function we want to use to computed the smallest eigen values of the laplacian.
+    
+    """
 
     W = KNN_adjacency_matrix(data, similarity_function, k_nearest_neighboors, weighted)
     L = laplacian_sym(W)
@@ -196,8 +220,20 @@ def final_spectral_clustering_sym(data, similarity_function, k_nearest_neighboor
     return labels
 
 def final_spectral_clustering_rw(data, similarity_function, k_nearest_neighboors, number_of_clusters, weighted : bool, eigensolver) :
-    """Computes the predicted labels fro the data by spectral clustering, using the random walk laplacian."""
+    """Computes the predicted labels fro the data by spectral clustering, using the regular laplacian.
+    
+    Parameters
+    ----------
 
+    data : the array containing our dataset
+    similarity_function : the similarity notion we use to measure the distance between point in our graph
+    k_nearest_neighbors : the number of nearest neighbors we use to to go from our graph to the adjacency matrix
+    number_of_clusters : clear
+    weighted : True or False, it depends on if we want to weight the edges of our graph with the weights computed by the similarity function. 
+    eigensolver : the function we want to use to computed the smallest eigen values of the laplacian.
+    
+    """
+    
     W = KNN_adjacency_matrix(data, similarity_function, k_nearest_neighboors, weighted)
     L = laplacian_rw(W)
     U = eigensolver(L, number_of_clusters)

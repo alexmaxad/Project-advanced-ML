@@ -1,4 +1,4 @@
-# Project: A Comparative Study of Spectral Clustering and K-Means Clustering
+# Project: A Comparative Study of Spectral Clustering and Guided PCA Clustering
 
 ## Introduction
 
@@ -55,6 +55,23 @@ The project is organized into several sections for clear understanding and logic
 
 8. *References*
    - List of used bibliographic references
+
+## Code Structure
+
+All codes have been written by us, except if it is mentionned.
+
+1. **Spectral clustering**
+    - ```spectral_functions.py``` : This file contains all the functions used to perform spectral clustering. The code has been largely inspired by the article "*A tutorial on spectral clustering*" by Luxburg. However, even if we tried to use the power method to compute the smallest eigenvectors of a laplacian matrix as the article advisesÒ, we prefered using the ARPACK package, available on scipy, which is a way quicker method for sparse matrices. The script gives functions to perform spectral clustering with different types of graphs and laplacians, but in practice we only used the KNN graph with random walk or symetric laplacians, as it was advised in the previously mentionned article. The Kmeans stage of spectral clustering is done using our functions in ```K_means.py```.
+    - ```spectral_class.py``` :  This file contains similar functions as the previous one, but built in a spectral clustering class. For reasons that we haven't fully understood for now, the use of this class takes more time to run than directly using the functions from ```spectra_functions```, so we decided no to use it for our tests. Therefore, this file doesn't really matter. 
+
+2. **Tests and comparisons**
+    - ```Test missing data.ipynb``` : This notebook studies and compares the accuracy of guided PCA and spectral clustering on syntethic data. We set a number of clusters, a number of features and cluster centers at the begginning, then we remove different proportions of the data. The data is then completed with a 5 nearest neighbor search. After that, we look at the evolution of number of correctly classified points by our two different methods, compared to the proportion of missing data.
+    - ```Test noisy data.ipynb``` : This notebook allows to observe the performances of our two methods on noisy synthetic data. We first generate data with a fixed number of features and clusters, then we add homoscedastic and heteroscedastic noise to this data. After that we compare the accuracy of standard Kmeans, guided PCA and spectral clustering on the different types of data. We also look at the influence on the clustering's accuracy of the number of clusters, the number of clusters, and the number of nearest neighbors considered in the spectral clustering. 
+
+## Results reproduction
+
+All the results can be directly obtained by executing the notebooks, as the data is loaded from scikit-learn. 
+However, the results of spectrl clustering depend largely on the similarity function used, if we use a weighted graph or not, and the number of nearest neighbors we use to construct the adjacency matrix. To get satisfying results, it is thus advised to set the arguments : ```similarity_function = euclidian_similarity_function``` and ```weighted = True```.
 
 ## Prerequisites
 

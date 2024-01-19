@@ -7,40 +7,40 @@ from numpy.typing import NDArray
 from scipy.spatial.distance import cdist, squareform
 
 def random_partition_init(model, X: NDArray) -> NDArray:
-    """ Random Partition initialise aleatoirement les clusters
-    puis effectue une etape de centre.
+    """ Random Partition randomly initializes clusters
+    then performs a center step.
     """
     clusters = model._random_generator.choice(model.k, len(X)) 
-    # on remplace les centres precendent par une matrice vide (np.empty) 
-    # dans l'appel de _center_step
+    # replace precendent centers with an empty matrix (np.empty)
+    # in the _center_step call
     return model._center_step(np.empty((model.k, X.shape[1])), clusters, X)
 
 def forgy_init(model, X: NDArray) -> NDArray:
-    """ L'initialisation forgy assigne directement les centres a partir des points du jeu de données"""
+    """ Forgy initialization assigns centers directly from dataset points """
     return X[model._random_generator.choice(len(X), model.k, replace=False)] 
 
 def kmeans_plus_plus_init(model, X: NDArray) -> NDArray:
-    """Initialisation kmeans ++ """
+    """ Initialization kmeans ++ """
 
-    # assignation du premier centre aleatoirement
+    # random assignment of the first center
     centers = [model._random_generator.choice(len(X), 1)[0]]
-    # iteration jusqu'a avoir k centres
+    # iteration until k centers
     for _i in range(2, model.k + 1):
-        # calcule de la distance des points aux centres
+        # calculates the distance from points to centers
 
         distances = cdist(X, X[centers], metric=model._distance) ** 2 #type: ignore
 
-        # on prend la distance au centroid le plus proche
+        # we take the distance to the nearest centroid
         min_distances = (distances).min(axis=1).squeeze()
-        # normalisation dans [0,1]
+        # standardization in [0,1]
         proba = min_distances / np.sum(min_distances)
 
-        # selection aleatoire de (taille des centres)+1 points
-        # pour etre sur qu'au moins 1 des tiré au hasard n'est pas deja un centre
+        # random selection of (center size)+1 points
+        # to be sure that at least 1 of the randomly selected is not already a center
         picks = model._random_generator.choice(
             len(X), size=len(centers) + 1, p=proba, replace=False
         )
-        # ajout du premier centre selectionné qui n'en est pas deja un.
+        # addition of the first center selected that isn't already one.
         centers.append(picks[np.isin(picks, centers, invert=True)][0])    
     return X[centers]
     
@@ -48,7 +48,7 @@ def guided_PCA_init(model, X: NDArray) -> NDArray:
     
     if model.df_PCA is None:
 
-        n_components = model.k  # Choisissez le nombre de composantes principales
+        n_components = model.k # Choose the number of principal components
         pca = PCA(n_components=n_components)
         model.df_PCA = pca.fit_transform(X)
         model.model_PCA = pca
@@ -70,35 +70,28 @@ dico_init_fcts = {
 
 class generalized_Kmeans():
     """
-    La classe BaseKAlgorithme est une classe de base pour les algorithmes de clustering K-means.
-    On héritera cette classe pour simplifier les classes Kmeans et FuzzyMeans.
-    
+    The generalized_Kmeans class is a class for K-means clustering algorithms.
+
     Attributes:
-        - k (int): Nombre de clusters.
-        - init (Callable): Fonction d'initialisation utilisée pour initialiser les centres.
-        - loss (str): Fonction de perte utilisée pour évaluer la qualité du clustering.
-        La string passée permettra de récupérer la loss dans le store
+        - k (int): Number of clusters.
+        - init (Callable): Initialization function used to initialize centers.
+        - loss (str): Loss function used to evaluate clustering quality.
+        The string passed will retrieve the loss from the store
 
-        - epochs (int): Nombre d'estimateurs entrainés.
-        - max_iter (int): Nombre maximum d'itérations pour chaque estimateur.
+        - epochs (int): Number of trained estimators.
+        - max_iter (int): Maximum number of iterations for each estimator.
 
-        - sensitivity (float): Sensibilité pour déterminer la convergence de l'algorithme (difference entre les centres entre deux étapes).
+        - sensitivity (float): Sensitivity to determine algorithm convergence (difference between centers between two steps).
 
-        - random_seed (int = 42): la graine aléatoire.
-        - distance (str): Métrique de distance utilisée pour calculer la similarité entre les points.
-        La string passée doit correspondre a une distance de sklearn 
+        - random_seed (int = 42): the random seed.
+        - distance (str): Distance metric used to calculate similarity between points.
+        The string passed must correspond to a sklearn distance
 
-        - norm : Norme utilisée pour calculer la différence des centre entre chaque étape.
+        - norm : Standard used to calculate the difference in centers between each stage.
 
-        Ces 2 attributs sont purement techniques et permettent d'enregistrer la PCA en cas de multiples executions de la guided_PCA sur le même data set 
-        - df_PCA : la reduced data set
-        - model_PCA : le modèle de l'ACP 
-    
-    Classe Pour l'algorithme de Kmeans.
-
-    Matrix data fitted by this class needs to be of the form (n,d) with :
-    - n : number of data points
-    - d : number of features
+        These 2 attributes are purely technical and are used to register the PCA in the event of multiple guided_PCA executions on the same data set.
+        - df_PCA : the reduced data set
+        - model_PCA : The PCA model
     """
 
 
@@ -118,19 +111,19 @@ class generalized_Kmeans():
             model_PCA = None,
         ):
 
-        # initialisation d'un generateur aleatoire
+        # initializing a random generator
         if random_seed == 0:
             self._random_generator = np.random.default_rng()
         else:
             self._random_generator = np.random.default_rng(random_seed)
 
-        # recuperation de la distance
+        # distance recovery
         self._distance: str = distance
 
         self.init = init
         self._init = dico_init_fcts[init]
 
-        # recuperation de la loss
+        # loss recovery
         self._loss = loss
 
         self.k = k
@@ -145,17 +138,17 @@ class generalized_Kmeans():
 
     def inertia(self, centers: NDArray, clusters: NDArray, X: NDArray) -> float:
         """ 
-        L'inertie représente la variance intra-cluster de l'estimateur. On peut en changer la 
-        distance, ainsi que la réduction (par défaut, on prend la somme des variances intra-clusters)
+        The inertia represents the intra-cluster variance of the estimator. You can change the
+        distance, and reduction (by default, the sum of intra-cluster variances is used)
         """
         inertia = 0
-        # iteration sur les centres
+        # iteration on centers
         for cluster, center in enumerate(centers):
-            # donnees liees a un cluster 
+            # cluster data
             cluster_data = X[clusters == cluster]
             cluster_count = len(cluster_data)
             if cluster_count > 0:
-                # ajout de la variance intra-cluster pour ce cluster
+                # intra-cluster variance added for this cluster
                 inertia += np.linalg.norm(cluster_data - center)**2
             else:
                 inertia = np.inf           
@@ -166,64 +159,63 @@ class generalized_Kmeans():
             return self.inertia(centers, clusters, X)
 
     def _center_step(self, centers: NDArray, clusters: NDArray, X: NDArray) -> NDArray:
-        # iteration sur les clusters:
+        # iteration on clusters:
         for cluster in np.unique(clusters):
-            # les points contenus dans un cluster
+            # points contained in a cluster
             cluster_data = X[clusters == cluster]
             if len(cluster_data) > 0:
-                # remplace le centre par le nouveau (moyenne ou mediane des points)
+                # replace the center with the new center (average or median of points)
                 centers[cluster] = self._center_step_reducer(cluster_data, axis=0)
         return centers
 
     def _cluster_step(self, centers: NDArray, X: NDArray) -> NDArray:
-        # choisi pour chaque point le centre le plus proche selon la distance
+        # for each point, choose the nearest center according to distance
         return np.argmin(cdist(X, centers, metric=self._distance), axis=1)
 
     def fit(self, X: NDArray):
         best_model: NDArray
         best_loss: float = inf
-        # iteration selon le nombre de model souhaité
+        # iteration according to desired number of models
         if self.init == 'guided_PCA':
             self.epochs = 1
         for self.epoch in range(self.epochs):
-            # initialisation des centres
+            # center initialization
             centers: NDArray = self._init(self, X)
             clusters: NDArray
-            # initialisation du compteur d'etape 
+            # step counter initialization
             step_counter: int = 0
             
-            # initalisation de la difference entre les centre a l'infini
+            # initalizing the difference between centers at infinity
             center_diff = np.inf
-            # boucle while 
             while (step_counter < self.max_iter) and (center_diff > self.sensitivity):
-                # copie memoire des centres actuels car ceux-ci vont etre modifies 
-                # dans la prochaine etape de centre
+                # memory copy of current centers as they will be modified
+                # in the next center stage
                 last_centers = centers.copy()
 
-                # assignation des clusters
+                # cluster assignment
                 clusters = self._cluster_step(centers, X)
 
-                # assignation des centres
+                # center assignment
                 centers = self._center_step(centers, clusters, X)
 
                 step_counter+=1
 
-                # calcul de la difference entre les centres precedents et les nouveaux
+                # calculating the difference between previous and new centers
                 center_diff = self.norm(centers - last_centers)
             
-            # calcul de la loss
+            # loss calculation
             loss = self._set_loss(centers, clusters, X) #type: ignore
             if loss < best_loss:
                 best_model = centers
                 best_loss = loss
                 best_count = step_counter
 
-        # assignation du meilleur estimateur
+        # best estimator assignment
         self.centers_ = best_model #type: ignore
         self.loss_ = best_loss
         self.step_counter_ = best_count #type: ignore
         return self
 
     def predict(self, X: NDArray) -> NDArray:
-        # prediction en faisant une cluster_step avec les centres entraîné
+        # prediction by cluster_step with trained centers
         return self._cluster_step(self.centers_, X)
